@@ -49,7 +49,7 @@ declare module 'rc-input-number';
 
 declare module 'rc-pagination';
 
-declare module 'rc-notification';
+// declare module 'rc-notification';
 
 declare module 'rc-dialog';
 

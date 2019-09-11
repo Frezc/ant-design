@@ -1,6 +1,7 @@
 import * as React from 'react';
-import Notification from 'rc-notification';
+import Notification, { INotification } from 'rc-notification';
 import Icon from '../icon';
+import { NotificationInstance, createInstanceInPortal } from './createInstanceInPortal';
 
 let defaultDuration = 3;
 let defaultTop: number;
@@ -11,7 +12,7 @@ let transitionName = 'move-up';
 let getContainer: () => HTMLElement;
 let maxCount: number;
 
-function getMessageInstance(callback: (i: any) => void) {
+function getMessageInstance(callback: (i: INotification) => void) {
   if (messageInstance) {
     callback(messageInstance);
     return;
@@ -49,13 +50,16 @@ export interface MessageType {
 
 export interface ArgsProps {
   content: React.ReactNode;
-  duration: number | null;
+  duration?: number;
   type: NoticeType;
   onClose?: () => void;
   icon?: React.ReactNode;
 }
 
-function notice(args: ArgsProps): MessageType {
+function notice(
+  getInstance: (callback: (instance: INotification) => void) => void,
+  args: ArgsProps,
+): MessageType {
   const duration = args.duration !== undefined ? args.duration : defaultDuration;
   const iconType = {
     info: 'info-circle',
@@ -73,7 +77,7 @@ function notice(args: ArgsProps): MessageType {
       }
       return resolve(true);
     };
-    getMessageInstance(instance => {
+    getInstance(instance => {
       const iconNode = (
         <Icon type={iconType} theme={iconType === 'loading' ? 'outlined' : 'filled'} />
       );
@@ -121,11 +125,12 @@ export interface ConfigOptions {
 }
 
 const api: any = {
-  open: notice,
+  open: (args: ArgsProps) => notice(getMessageInstance, args),
   config(options: ConfigOptions) {
     if (options.top !== undefined) {
       defaultTop = options.top;
       messageInstance = null; // delete messageInstance for new defaultTop
+      msgInstanceInHook = null;
     }
     if (options.duration !== undefined) {
       defaultDuration = options.duration;
@@ -139,16 +144,21 @@ const api: any = {
     if (options.transitionName !== undefined) {
       transitionName = options.transitionName;
       messageInstance = null; // delete messageInstance for new transitionName
+      msgInstanceInHook = null;
     }
     if (options.maxCount !== undefined) {
       maxCount = options.maxCount;
       messageInstance = null;
+      msgInstanceInHook = null;
     }
   },
   destroy() {
     if (messageInstance) {
       messageInstance.destroy();
       messageInstance = null;
+    }
+
+    if (msgInstanceInHook) {
     }
   },
 };
@@ -175,6 +185,44 @@ export interface MessageApi {
   open(args: ArgsProps): MessageType;
   config(options: ConfigOptions): void;
   destroy(): void;
+}
+
+// use same instance in every hook
+let msgInstanceInHook: NotificationInstance | null;
+
+export function useMessage() {
+  if (!msgInstanceInHook) {
+    msgInstanceInHook = createInstanceInPortal({
+      prefixCls,
+      transitionName,
+      style: { top: defaultTop }, // 覆盖原来的样式
+      getContainer,
+      maxCount,
+      componentName: 'useMessage',
+    });
+  }
+
+  const hookApi: any = {
+    open: (args: ArgsProps) => notice(cb => cb(msgInstanceInHook!), args),
+    destroy() {
+      if (messageInstance) {
+        messageInstance.destroy();
+        messageInstance = null;
+      }
+    },
+  };
+
+  ['success', 'info', 'warning', 'error', 'loading'].forEach(type => {
+    api[type] = (content: ConfigContent, duration?: ConfigDuration, onClose?: ConfigOnClose) => {
+      if (typeof duration === 'function') {
+        onClose = duration;
+        duration = undefined;
+      }
+      return api.open({ content, duration, type, onClose });
+    };
+  });
+
+  return [];
 }
 
 export default api as MessageApi;

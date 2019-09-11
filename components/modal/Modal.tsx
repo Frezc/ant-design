@@ -127,6 +127,21 @@ export interface ModalLocale {
   justOkText: string;
 }
 
+export type HookReturnType = Readonly<
+  [
+    {
+      info: ModalFunc;
+      success: ModalFunc;
+      error: ModalFunc;
+      warn: ModalFunc;
+      warning: ModalFunc;
+      confirm: ModalFunc;
+      destroyAll: () => void;
+    },
+    JSX.Element[],
+  ]
+>;
+
 export default class Modal extends React.Component<ModalProps, {}> {
   static info: ModalFunc;
 
@@ -141,6 +156,7 @@ export default class Modal extends React.Component<ModalProps, {}> {
   static confirm: ModalFunc;
 
   static destroyAll: () => void;
+  static useModal: () => HookReturnType;
 
   static defaultProps = {
     width: 520,

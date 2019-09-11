@@ -6,7 +6,7 @@ import Dialog, { ModalFuncProps, destroyFns } from './Modal';
 import ActionButton from './ActionButton';
 import { getConfirmLocale } from './locale';
 
-interface ConfirmDialogProps extends ModalFuncProps {
+export interface ConfirmDialogProps extends ModalFuncProps {
   afterClose?: () => void;
   close: (...args: any[]) => void;
   autoFocusButton?: null | 'ok' | 'cancel';
@@ -14,7 +14,7 @@ interface ConfirmDialogProps extends ModalFuncProps {
 
 const IS_REACT_16 = !!ReactDOM.createPortal;
 
-const ConfirmDialog = (props: ConfirmDialogProps) => {
+export const ConfirmDialog = (props: ConfirmDialogProps) => {
   const {
     icon,
     onCancel,

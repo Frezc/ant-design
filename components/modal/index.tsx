@@ -2,9 +2,9 @@ import * as React from 'react';
 import Modal, { ModalFuncProps, destroyFns } from './Modal';
 import confirm from './confirm';
 import Icon from '../icon';
+import useModal from './useModal';
 
 export { ActionButtonProps } from './ActionButton';
-export { ModalProps, ModalFuncProps } from './Modal';
 
 function modalWarn(props: ModalFuncProps) {
   const config = {
@@ -67,5 +67,7 @@ Modal.destroyAll = function() {
     }
   }
 };
+
+Modal.useModal = useModal;
 
 export default Modal;
